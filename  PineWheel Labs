@@ -1,0 +1,52 @@
+STEP #1 
+pip install langchain langgraph langchain_openai
+
+STEP #2
+Node 1: Parse incoming logs.
+Node 2: Perform threat intelligence lookup.
+Node 3: Aggregate results and trigger alerts.
+
+STEP #3
+from langgraph.graph import StateGraph, MessagesState
+from langgraph.prebuilt import ToolNode
+
+# Initialize stateful graph
+workflow = StateGraph(MessagesState)
+
+STEP #4
+from langchain_core.tools import tool
+
+@tool
+def analyze_logs(log_data: str):
+    """Analyze logs for suspicious activity."""
+    # Custom logic here
+    return "No threats detected."
+
+@tool
+def threat_lookup(indicator: str):
+    """Query threat intelligence database."""
+    return f"Threat info for {indicator}"
+
+# Add tools as nodes
+workflow.add_node("log_analysis", ToolNode([analyze_logs]))
+workflow.add_node("threat_intel", ToolNode([threat_lookup]))
+
+STEP #5
+
+workflow.add_edge("START", "log_analysis")
+workflow.add_edge("log_analysis", "threat_intel")
+workflow.add_edge("threat_intel", "END")
+
+STEP #6
+from langgraph.checkpoint.memory import MemorySaver
+
+checkpointer = MemorySaver()
+app = workflow.compile(checkpointer=checkpointer)
+
+STEP #7
+input_data = {"messages": [{"role": "user", "content": "Analyze these logs"}]}
+final_state = app.invoke(input_data)
+print(final_state["messages"][-1].content)
+
+STEP #8
+Debugging and Observability by Integrating tools like LangSmith or Langfuse to monitor performance and debug errors.
